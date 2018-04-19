@@ -36,7 +36,7 @@ gradle clean test jacocoTestReport
 ```
 Update gradlew version
 ```
-gradle wrapper --gradle-version 4.5 --distribution-type ALL
+gradle wrapper --gradle-version 4.7 --distribution-type ALL
 ```
 
 ### Useful run commands
