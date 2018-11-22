@@ -38,9 +38,9 @@ import org.jetbrains.annotations.Nullable;
 import zielu.gittoolbox.ResBundle;
 import zielu.gittoolbox.blame.Blame;
 import zielu.gittoolbox.blame.BlameService;
+import zielu.gittoolbox.cache.VirtualFileRepoCache;
 import zielu.gittoolbox.metrics.Metrics;
 import zielu.gittoolbox.metrics.MetricsHost;
-import zielu.gittoolbox.util.GtUtil;
 
 public class BlameStatusWidget extends EditorBasedWidget implements StatusBarUi,
     StatusBarWidget.Multiframe, StatusBarWidget.TextPresentation {
@@ -49,6 +49,7 @@ public class BlameStatusWidget extends EditorBasedWidget implements StatusBarUi,
   private static final int MAX_LENGTH = 27;
   private static final String MAX_POSSIBLE_TEXT = Strings.repeat("0", MAX_LENGTH);
   private final GitVcs git;
+  private final VirtualFileRepoCache fileRepoCache;
   private final BlameService lens;
   private final Set<Document> inBulkUpdate = ContainerUtil.newConcurrentSet();
   private final Timer updateForDocumentTimer;
@@ -66,6 +67,7 @@ public class BlameStatusWidget extends EditorBasedWidget implements StatusBarUi,
   public BlameStatusWidget(@NotNull Project project) {
     super(project);
     git = GitVcs.getInstance(project);
+    fileRepoCache = VirtualFileRepoCache.getInstance(project);
     Metrics metrics = MetricsHost.project(project);
     updateForDocumentTimer = metrics.timer("blame-statusbar-update-for-document");
     updateForCaretTimer = metrics.timer("blame-statusbar-update-for-caret");
@@ -135,6 +137,10 @@ public class BlameStatusWidget extends EditorBasedWidget implements StatusBarUi,
       if (currentFile != null) {
         Editor selectedEditor = editor.get();
         fileChanged(selectedEditor, currentFile);
+      } else {
+        if (clearBlame()) {
+          updateWidget();
+        }
       }
     }
   }
@@ -157,7 +163,7 @@ public class BlameStatusWidget extends EditorBasedWidget implements StatusBarUi,
   }
 
   private boolean isUnderVcs(@NotNull VirtualFile file) {
-    return underVcsTimer.timeSupplier(() -> git.fileIsUnderVcs(GtUtil.localFilePath(file)));
+    return underVcsTimer.timeSupplier(() -> fileRepoCache.isUnderGitRoot(file));
   }
 
   private void updateForEditor(@NotNull Editor updatedEditor) {
@@ -166,10 +172,18 @@ public class BlameStatusWidget extends EditorBasedWidget implements StatusBarUi,
       return;
     }
     file = new WeakReference<>(FileDocumentManager.getInstance().getFile(updatedEditor.getDocument()));
+    updateForEditorWithCurrentFile(updatedEditor);
+  }
+
+  private void updateForEditorWithCurrentFile(@NotNull Editor updatedEditor) {
     if (shouldShow()) {
       VirtualFile currentFile = getCurrentFileUnderVcs();
       if (currentFile != null) {
-        fileChanged(selectedEditor, currentFile);
+        fileChanged(updatedEditor, currentFile);
+      } else {
+        if (clearBlame()) {
+          updateWidget();
+        }
       }
     }
   }
@@ -301,12 +315,12 @@ public class BlameStatusWidget extends EditorBasedWidget implements StatusBarUi,
   public void selectionChanged(@NotNull FileEditorManagerEvent event) {
     if (!ApplicationManager.getApplication().isUnitTestMode()) {
       updateForSelectionTimer.time(() -> {
-        editor = new WeakReference<>(getEditor());
+        Editor currentEditor = getEditor();
+        editor = new WeakReference<>(currentEditor);
         file = new WeakReference<>(event.getNewFile());
         if (shouldShow()) {
-          VirtualFile currentFile = getCurrentFileUnderVcs();
-          if (currentFile != null) {
-            fileChanged(editor.get(), currentFile);
+          if (currentEditor != null) {
+            updateForEditorWithCurrentFile(currentEditor);
           }
         }
       });
