@@ -1,14 +1,16 @@
 package zielu.gittoolbox.status.behindtracker;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.messages.MessageBusConnection;
 import git4idea.repo.GitRepository;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.jetbrains.annotations.NotNull;
-import zielu.gittoolbox.GitToolBoxApp;
 import zielu.gittoolbox.cache.PerRepoInfoCache;
 import zielu.gittoolbox.cache.PerRepoStatusCacheListener;
 import zielu.gittoolbox.cache.RepoInfo;
@@ -20,6 +22,7 @@ public class BehindTrackerController implements ProjectComponent {
   private final Logger log = Logger.getInstance(getClass());
   private final AtomicBoolean active = new AtomicBoolean();
   private final Project project;
+  private ScheduledExecutorService executorService;
   private ReschedulingExecutor executor;
   private BehindTracker behindTracker;
   private MessageBusConnection connection;
@@ -31,7 +34,9 @@ public class BehindTrackerController implements ProjectComponent {
   @Override
   public void initComponent() {
     behindTracker = BehindTracker.getInstance(project);
-    executor = new ReschedulingExecutor(GitToolBoxApp.getInstance().tasksExecutor(), true);
+    executorService = Executors.newScheduledThreadPool(1,
+        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("GitToolBox-BehindTracker-%s").build());
+    executor = new ReschedulingExecutor(executorService, true);
     connectToMessageBus();
   }
 
@@ -89,6 +94,10 @@ public class BehindTrackerController implements ProjectComponent {
     if (executor != null) {
       executor.dispose();
       executor = null;
+    }
+    if (executorService != null) {
+      executorService.shutdown();
+      executorService = null;
     }
   }
 }

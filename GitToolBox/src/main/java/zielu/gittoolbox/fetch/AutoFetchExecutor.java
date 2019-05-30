@@ -1,5 +1,6 @@
 package zielu.gittoolbox.fetch;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.diagnostic.ControlFlowException;
 import com.intellij.openapi.diagnostic.Logger;
@@ -10,6 +11,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.Semaphore;
@@ -17,7 +19,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.jetbrains.annotations.NotNull;
-import zielu.gittoolbox.GitToolBoxApp;
 import zielu.gittoolbox.metrics.ProjectMetrics;
 
 public class AutoFetchExecutor implements ProjectComponent {
@@ -45,7 +46,9 @@ public class AutoFetchExecutor implements ProjectComponent {
 
   @Override
   public void initComponent() {
-    executor = GitToolBoxApp.getInstance().autoFetchExecutor();
+    executor = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors(),
+        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("GitToolBox-AutoFetch-%s").build()
+    );
   }
 
   @Override
@@ -57,6 +60,10 @@ public class AutoFetchExecutor implements ProjectComponent {
   public void projectClosed() {
     if (active.compareAndSet(true, false)) {
       cancelCurrentTasks();
+      if (executor != null) {
+        executor.shutdown();
+        executor = null;
+      }
     }
   }
 

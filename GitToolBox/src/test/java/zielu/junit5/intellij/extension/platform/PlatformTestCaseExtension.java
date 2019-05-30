@@ -12,10 +12,14 @@ import com.intellij.testFramework.EdtTestUtil;
 import com.intellij.testFramework.EdtTestUtilKt;
 import com.intellij.testFramework.PlatformTestCase;
 import com.intellij.testFramework.TestRunnerUtil;
+import com.intellij.util.ReflectionUtil;
 import com.intellij.util.messages.MessageBusConnection;
 import com.intellij.util.messages.Topic;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.swing.SwingUtilities;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.extension.AfterEachCallback;
@@ -26,6 +30,7 @@ import org.junit.jupiter.api.extension.ExtensionContext.Store;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
+import org.junit.platform.commons.util.ReflectionUtils;
 import zielu.junit5.intellij.parameters.ExtensionContextParamResolver;
 import zielu.junit5.intellij.parameters.ParameterHolder;
 
@@ -64,9 +69,12 @@ public class PlatformTestCaseExtension implements BeforeEachCallback, AfterEachC
   }
 
   private static class PlatformTestCaseJUnit5 extends PlatformTestCase {
+    private final AtomicReference<ExtensionContext> localContext = new AtomicReference<>();
 
     //based on com.intellij.testFramework.PlatformTestCase.runBare
     private void initialize(ExtensionContext context) throws Exception {
+      localContext.set(context);
+
       setName(getTestName(context));
       if (runInDispatchThread()) {
         TestRunnerUtil.replaceIdeEventQueueSafely();
@@ -78,6 +86,8 @@ public class PlatformTestCaseExtension implements BeforeEachCallback, AfterEachC
       holder.register(Project.class, this::getProject);
       holder.register(Module.class, this::getModule);
       holder.register(PlatformTest.class, () -> getPlatformTest(context));
+
+      localContext.set(null);
     }
 
     private String getTestName(ExtensionContext context) {
@@ -86,6 +96,27 @@ public class PlatformTestCaseExtension implements BeforeEachCallback, AfterEachC
 
     private Store getStore(ExtensionContext context) {
       return context.getStore(NS);
+    }
+
+    @Override
+    protected Project doCreateProject(@NotNull Path projectFile) throws Exception {
+      Project project = super.doCreateProject(projectFile);
+      ExtensionContext context = localContext.get();
+      context.getTestInstance().ifPresent(testInstance -> afterProjectCreated(project, testInstance));
+      return project;
+    }
+
+    private void afterProjectCreated(@NotNull Project project, @NotNull Object testInstance) {
+      List<Method> declaredMethods = ReflectionUtil.getClassDeclaredMethods(testInstance.getClass());
+      declaredMethods.stream()
+          .filter(method -> method.isAnnotationPresent(AfterProjectCreated.class))
+          .forEach(method -> {
+            if (method.getParameterCount() == 1) {
+              ReflectionUtils.invokeMethod(method, testInstance, project);
+            } else {
+              ReflectionUtils.invokeMethod(method, testInstance);
+            }
+          });
     }
 
     //based on com.intellij.testFramework.PlatformTestCase.runBare
