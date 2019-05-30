@@ -5,7 +5,6 @@ import com.intellij.util.xmlb.annotations.Transient;
 import org.jetbrains.annotations.Nullable;
 
 public enum AuthorNameType {
-  INITIALS(ShortNameType.INITIALS),
   LASTNAME(ShortNameType.LASTNAME),
   FIRSTNAME(ShortNameType.FIRSTNAME),
   FULL(ShortNameType.NONE);

@@ -1,12 +1,13 @@
 package zielu.gittoolbox;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.intellij.openapi.components.BaseComponent;
 import com.intellij.openapi.diagnostic.Logger;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import zielu.gittoolbox.util.AppUtil;
 
-public class GitToolBoxApp {
+public class GitToolBoxApp implements BaseComponent {
   private final Logger log = Logger.getInstance(getClass());
   private final ScheduledExecutorService autoFetchExecutor;
   private final ScheduledExecutorService tasksExecutor;
@@ -22,8 +23,14 @@ public class GitToolBoxApp {
     log.debug("Created tasks executor: ", tasksExecutor);
   }
 
+  @Override
+  public void disposeComponent() {
+    autoFetchExecutor.shutdown();
+    tasksExecutor.shutdown();
+  }
+
   public static GitToolBoxApp getInstance() {
-    return AppUtil.getServiceInstance(GitToolBoxApp.class);
+    return AppUtil.getComponent(GitToolBoxApp.class);
   }
 
   public ScheduledExecutorService autoFetchExecutor() {
