@@ -4,7 +4,7 @@ import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.JBPopupMenu;
 import com.intellij.ui.CollectionListModel;
 import com.intellij.ui.DocumentAdapter;
-import com.intellij.ui.SimpleListCellRenderer;
+import com.intellij.ui.ListCellRendererWrapper;
 import com.intellij.ui.ToolbarDecorator;
 import com.intellij.ui.awt.RelativePoint;
 import com.intellij.ui.components.JBList;
@@ -102,7 +102,7 @@ public class GtForm implements GtFormUi {
       }
     });
 
-    decorationLayoutList.setCellRenderer(new SimpleListCellRenderer<DecorationPartConfig>() {
+    decorationLayoutList.setCellRenderer(new ListCellRendererWrapper<DecorationPartConfig>() {
       @Override
       public void customize(JList list, DecorationPartConfig value, int index, boolean selected, boolean hasFocus) {
         setText(value.prefix + value.type.getPlaceholder() + value.postfix);
@@ -150,7 +150,7 @@ public class GtForm implements GtFormUi {
       }
     });
 
-    presentationMode.setRenderer(new SimpleListCellRenderer<StatusPresenter>() {
+    presentationMode.setRenderer(new ListCellRendererWrapper<StatusPresenter>() {
       @Override
       public void customize(JList list, StatusPresenter presenter, int index, boolean isSelected,
                             boolean hasFocus) {
@@ -165,7 +165,7 @@ public class GtForm implements GtFormUi {
       presentationBehindTrackerPreview.setText(PresenterPreview.getBehindTrackerPreview(presenter));
     });
     showProjectViewStatusCheckBox.addItemListener(e -> onProjectViewStatusChange());
-    updateProjectAction.setRenderer(new SimpleListCellRenderer<UpdateProjectAction>() {
+    updateProjectAction.setRenderer(new ListCellRendererWrapper<UpdateProjectAction>() {
       @Override
       public void customize(JList list, UpdateProjectAction action, int index, boolean selected,
                             boolean hasFocus) {
@@ -173,7 +173,7 @@ public class GtForm implements GtFormUi {
       }
     });
     updateProjectAction.setModel(getUpdateModeModel());
-    commitDialogCompletionMode.setRenderer(new SimpleListCellRenderer<CommitCompletionMode>() {
+    commitDialogCompletionMode.setRenderer(new ListCellRendererWrapper<CommitCompletionMode>() {
       @Override
       public void customize(JList list, CommitCompletionMode value, int index, boolean selected, boolean hasFocus) {
         setText(value.getDisplayLabel());
@@ -184,7 +184,7 @@ public class GtForm implements GtFormUi {
     blameInlineAuthorNameTypeCombo.setModel(new DefaultComboBoxModel<>(AuthorNameType.inlineBlame()));
     blameStatusAuthorNameTypeCombo.setRenderer(createAuthorNameTypeRenderer());
     blameStatusAuthorNameTypeCombo.setModel(new DefaultComboBoxModel<>(AuthorNameType.statusBlame()));
-    blameDateTypeCombo.setRenderer(new SimpleListCellRenderer<DateType>() {
+    blameDateTypeCombo.setRenderer(new ListCellRendererWrapper<DateType>() {
       @Override
       public void customize(JList list, DateType value, int index, boolean selected, boolean hasFocus) {
         setText(value.getDescription());
@@ -196,7 +196,7 @@ public class GtForm implements GtFormUi {
   }
 
   private ListCellRenderer<AuthorNameType> createAuthorNameTypeRenderer() {
-    return new SimpleListCellRenderer<AuthorNameType>() {
+    return new ListCellRendererWrapper<AuthorNameType>() {
       @Override
       public void customize(JList list, AuthorNameType value, int index, boolean selected, boolean hasFocus) {
         setText(value.getDescription());
