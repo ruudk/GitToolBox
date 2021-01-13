@@ -2,8 +2,7 @@
 .DS_Store
 
 .idea/
-GitToolBox.jar
-testRun/
 .gradle/
-ignore-revs.txt
-gradle/
+build/
+testDataDynamic/
+out/
