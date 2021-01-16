@@ -6,11 +6,9 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task.Backgroundable;
 import com.intellij.openapi.project.Project;
-import git4idea.GitUtil;
 import git4idea.GitVcs;
 import git4idea.fetch.GitFetchResult;
 import git4idea.repo.GitRepository;
-import git4idea.repo.GitRepositoryManager;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -62,8 +60,7 @@ class AutoFetchTask implements Runnable {
   }
 
   private List<GitRepository> findAllRepos() {
-    GitRepositoryManager repositoryManager = GitUtil.getRepositoryManager(project);
-    return ImmutableList.copyOf(repositoryManager.getRepositories());
+    return GtUtil.getManagedRepositories(project);
   }
 
   private void finishedNotification(Collection<GitRepository> fetched) {

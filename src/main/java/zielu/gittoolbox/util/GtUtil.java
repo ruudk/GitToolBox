@@ -1,5 +1,6 @@
 package zielu.gittoolbox.util;
 
+import com.google.common.collect.ImmutableList;
 import com.intellij.dvcs.DvcsUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vcs.FilePath;
@@ -46,6 +47,11 @@ public final class GtUtil {
 
   public static boolean hasRemotes(@NotNull GitRepository repository) {
     return !repository.getRemotes().isEmpty();
+  }
+
+  @NotNull
+  public static ImmutableList<GitRepository> getManagedRepositories(@NotNull Project project) {
+    return ImmutableList.copyOf(GitUtil.getRepositories(project));
   }
 
   @NotNull
