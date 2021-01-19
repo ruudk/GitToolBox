@@ -12,4 +12,8 @@ internal object ZResBundle {
   fun message(@PropertyKey(resourceBundle = BUNDLE_NAME) key: String, vararg params: Any?): String {
     return BundleBase.message(BUNDLE_HOLDER.bundle, key, *params)
   }
+
+  fun na(): String {
+    return message("generic.na")
+  }
 }

@@ -1,6 +1,5 @@
 package zielu.gittoolbox.ui
 
-import com.intellij.openapi.util.SystemInfo
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
@@ -42,10 +41,6 @@ internal class DatePresenterTest {
   fun `format should return not empty value`(): List<DynamicNode> {
     val types = DateType.values().toMutableList()
     types.remove(DateType.HIDDEN)
-    if (SystemInfo.isMac && SystemInfo.isOsVersionAtLeast("10.16")) {
-      // relative causes error on Big Sur
-      types.remove(DateType.RELATIVE)
-    }
 
     return types.map { type ->
       DynamicTest.dynamicTest("should return not empty value for $type") {
