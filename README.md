@@ -1,7 +1,15 @@
 GitToolBox - plugin for Jetbrains IDEs
 ======================================
-[![Build Status](https://travis-ci.org/zielu/GitToolBox.svg?branch=develop)](https://travis-ci.org/zielu/GitToolBox)
 
+# Repository status notice
+**Since 29 May 2021 plugin development continues in private repository.**
+**This repository serves as an archive but also public issue tracker and online manual.**
+
+Plugin is in development since 2014 and this codebase represents significant investment of my free time.
+Over the years there were only a few contributions so decision to close-source the plugin will not impact
+pace of development.
+
+# Description
 Plugin for family of Jetbrains IDEs that expands build-in `Git Integration`.
 
 ## Features
